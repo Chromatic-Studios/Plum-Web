@@ -22,10 +22,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 10rem; /* Adjusted text size */
+      font-size: 10rem;
       font-weight: bold;
       color: white;
-      background: #2e003e; /* Deep plum color */
+      background: #2e003e;
       z-index: 9999;
       opacity: 1;
       transition: opacity 1s;
@@ -46,7 +46,7 @@
     .content {
       display: none;
       padding: 20px;
-      background: #3c1c55; /* Plum sidebar background */
+      background: #3c1c55;
       height: 100vh;
       color: white;
     }
@@ -57,7 +57,7 @@
       margin-bottom: 20px;
     }
 
-    /* Sidebar and Nav Styles */
+    /* Sidebar */
     .sidebar {
       width: 200px;
       background: #3c1c55;
@@ -91,7 +91,7 @@
       padding: 20px;
     }
 
-    /* Responsive sidebar for mobile */
+    /* Responsive sidebar */
     @media (max-width: 760px) {
       .sidebar {
         width: 100%;
@@ -103,7 +103,7 @@
       }
     }
 
-    /* Modal Frame for Monochrome Plum Harvest */
+    /* Game Frame */
     .frame-container {
       display: none;
       position: fixed;
@@ -155,11 +155,11 @@
 
     iframe {
       width: 100%;
-      height: calc(100% - 40px); /* Full height minus header */
+      height: calc(100% - 40px);
       border: none;
     }
 
-    /* Clickable logo */
+    /* Clickable game logo */
     .logo-container {
       cursor: pointer;
       margin: 20px;
@@ -189,8 +189,7 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="brand">
-      <!-- You can replace this with your logo -->
-      <img src="your-logo.png" alt="Logo" style="max-width: 100%; height: auto;">
+      <img src="assets/icon.png" alt="Logo" style="max-width: 100%; height: auto;">
     </div>
     <nav class="nav" role="navigation" aria-label="Main navigation">
       <button data-tab="home">Home</button>
@@ -210,11 +209,9 @@
 
       <section id="games" class="tab card" style="display:none;margin-top:16px">
         <h1>Games</h1>
-        <p>Click on the logo to launch the game:</p>
-        
-        <!-- Clickable logo to open Monochrome Plum Harvest -->
+        <p>Click the logo to launch Monochrome Plum Harvest:</p>
         <div class="logo-container" onclick="openFrame()">
-          <img src="your-logo.png" alt="Monochrome Plum Harvest Logo">
+          <img src="assets/icon.png" alt="Monochrome Plum Harvest Logo">
         </div>
       </section>
 
@@ -230,7 +227,7 @@
     </div>
   </div>
 
-  <!-- Modal Frame for Monochrome Plum Harvest -->
+  <!-- Game Frame -->
   <div id="frame" class="frame-container">
     <div class="frame-header">
       <h2>Monochrome Plum Harvest</h2>
@@ -240,31 +237,28 @@
   </div>
 
   <script>
-    // Wait 2 seconds before hiding the intro animation and show the content
+    // Intro fade-out
     setTimeout(() => {
-      // Fade out the intro screen after 2 seconds
       document.getElementById('intro').style.transition = 'opacity 2s';
       document.getElementById('intro').style.opacity = '0';
-
-      // After 2 seconds, hide the intro and show the main content
       setTimeout(() => {
-        document.getElementById('intro').style.display = 'none'; // Hide the intro screen completely
-        document.querySelector('.content').style.display = 'block'; // Show the main content
-      }, 2000); // 2 second delay to match the fade-out transition time
-    }, 2000); // Wait 2 seconds before starting the fade-out of the intro
+        document.getElementById('intro').style.display = 'none';
+        document.querySelector('.content').style.display = 'block';
+      }, 2000);
+    }, 2000);
 
-    // Open the frame
+    // Open game frame
     function openFrame() {
       document.getElementById('frame').style.display = 'block';
     }
 
-    // Toggle fullscreen mode
+    // Toggle fullscreen
     function toggleFullscreen() {
       const frame = document.getElementById('frame');
       frame.classList.toggle('fullscreen');
     }
 
-    // Button click behavior to toggle between sections
+    // Sidebar tab navigation
     document.querySelectorAll('.nav button').forEach(button => {
       button.addEventListener('click', function() {
         let target = this.getAttribute('data-tab');
