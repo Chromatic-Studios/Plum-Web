@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monochrome Plum Harvest</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #2a2a2a, #0f0f0f);
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #f5f5f5;
+        }
+        
+        #gameContainer {
+            background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+            border: 4px solid #e5e5e5;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 0 50px rgba(255,255,255,0.1),
+                inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        #gameCanvas {
+            display: block;
+            background: linear-gradient(to bottom, #f5f5f5 0%, #d0d0d0 30%, #a0a0a0 70%, #808080 100%);
+        }
+        
+        #ui {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: #f5f5f5;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: linear-gradient(145deg, rgba(0,0,0,0.8), rgba(40,40,40,0.9));
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #666;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            min-width: 150px;
+        }
+        
+        .ui-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 3px 0;
+            border-bottom: 1px solid #444;
+            padding-bottom: 2px;
+        }
+        
+        .ui-row:last-child {
+            border-bottom: none;
+        }
+        
+        #gameOver, #upgradeScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+            border: 4px solid #e5e5e5;
+            padding: 40px;
+            border-radius: 25px;
+            text-align: center;
+            display: none;
+            box-shadow: 
+                0 15px 50px rgba(0,0,0,0.8),
+                inset 0 0 30px rgba(255,255,255,0.05);
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .upgrade-category {
+            margin: 25px 0;
+            padding: 20px;
+            background: linear-gradient(145deg, #0d0d0d, #1d1d1d);
+            border: 2px solid #555;
+            border-radius: 15px;
+        }
+        
+        .upgrade-category h3 {
+            color: #f5f5f5;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            border-bottom: 2px solid #666;
+            padding-bottom: 10px;
+        }
+        
+        .upgrade-item {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #666;
+            border-radius: 12px;
+            padding: 18px;
+            margin: 12px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        .upgrade-item:hover {
+            background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+            transform: scale(1.02);
+            box-shadow: 0 6px 15px rgba(255,255,255,0.1);
+        }
+        
+        .upgrade-item.affordable {
+            border-color: #f5f5f5;
+            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+        }
+        
+        .upgrade-item.unaffordable {
+            border-color: #666;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .upgrade-item.maxed {
+            border-color: #999;
+            background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .upgrade-description {
+            text-align: left;
+            flex: 1;
+            color: #e5e5e5;
+        }
+        
+        .upgrade-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #f5f5f5;
+            margin-bottom: 5px;
+        }
+        
+        .upgrade-effect {
+            font-size: 12px;
+            color: #b5b5b5;
+            margin-bottom: 3px;
+        }
+        
+        .upgrade-cost {
+            font-weight: bold;
+            color: #f5f5f5;
+            margin-left: 20px;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+        
+        .upgrade-level {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        button {
+            background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
+            color: #f5f5f5;
+            border: 2px solid #666;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 15px 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+        
+        button:hover {
+            background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+            border-color: #888;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }
+        
+        .coins {
+            color: #f5f5f5;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255,255,255,0.3);
+        }
+        
+        #particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        .stat-bar {
+            background: #333;
+            height: 4px;
+            border-radius: 2px;
+            margin: 2px 0;
+            overflow: hidden;
+        }
+        
+        .stat-fill {
+            background: linear-gradient(90deg, #666, #f5f5f5);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .combo-display {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            color: #f5f5f5;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        h2 {
+            color: #f5f5f5;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin-bottom: 20px;
+        }
+        
+        scrollbar {
+            background: #1a1a1a;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #666;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="particles" width="800" height="600"></canvas>
+        <div id="ui">
+            <div class="ui-row"><span>Score:</span> <span id="score">0</span></div>
+            <div class="ui-row"><span>Lives:</span> <span id="lives">3</span></div>
+            <div class="ui-row"><span>Coins:</span> <span id="coins" class="coins">0</span></div>
+            <div class="ui-row"><span>Level:</span> <span id="level">1</span></div>
+            <div class="ui-row"><span>Combo:</span> <span id="combo">0</span></div>
+            <div class="ui-row"><span>Multiplier:</span> <span id="multiplier">x1.0</span></div>
+            <div id="boostDisplay"></div>
+            <div class="stat-bar">
+                <div class="stat-fill" id="levelProgress" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div id="comboDisplay" class="combo-display">COMBO x0</div>
+        
+        <div id="gameOver">
+            <h2>⚰️ GAME TERMINATED ⚰️</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Coins Earned: <span id="coinsEarned" class="coins">0</span></p>
+            <p>Best Combo: <span id="bestCombo">0</span></p>
+            <button onclick="showUpgrades()">◈ UPGRADE FACILITY ◈</button>
+            <button onclick="startGame()">◈ RESTART HARVEST ◈</button>
+        </div>
+        
+        <div id="upgradeScreen">
+            <h2>⬛ MONOCHROME UPGRADE LABORATORY ⬛</h2>
+            <p>Research Points: <span id="totalCoins" class="coins">0</span></p>
+            <div id="upgradeList"></div>
+            <button onclick="startGame()">◈ DEPLOY UPGRADES ◈</button>
+            <button onclick="hideUpgrades()">◈ RETURN ◈</button>
+            <button onclick="showStats()" style="background: linear-gradient(145deg, #2a2a5a, #1a1a3a); border-color: #4a4a8a;">◈ STATISTICS ◈</button>
+            <button onclick="resetProgress()" style="background: linear-gradient(145deg, #5a2a2a, #3a1a1a); border-color: #8a4a4a;">◈ RESET DATA ◈</button>
+        </div>
+        
+        <div id="statsScreen" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(145deg, #1a1a1a, #2a2a2a); border: 4px solid #e5e5e5; padding: 40px; border-radius: 25px; text-align: center; display: none; box-shadow: 0 15px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,255,255,0.05); max-width: 600px;">
+            <h2>⬛ HARVESTER STATISTICS ⬛</h2>
+            <div id="statsContent" style="text-align: left; margin: 20px 0;">
+                <!-- Statistics will be populated here -->
+            </div>
+            <button onclick="hideStats()">◈ RETURN ◈</button>
+        </div>
+    </div>
+
+    <script>
+        // Cookie management system
+        const CookieManager = {
+            set: function(name, value, days = 30) {
+                const expires = new Date();
+                expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+                document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+            },
+            
+            get: function(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+                }
+                return null;
+            },
+            
+            delete: function(name) {
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            },
+            
+            saveGameData: function() {
+                // Save coins and all upgrade levels
+                this.set('plumCoins', gameState.coins);
+                Object.keys(upgrades).forEach(key => {
+                    this.set(key + 'Level', upgrades[key].level);
+                });
+                
+                // Save game statistics
+                this.set('totalGamesPlayed', (parseInt(this.get('totalGamesPlayed') || '0') + 1));
+                this.set('highestScore', Math.max(parseInt(this.get('highestScore') || '0'), gameState.score));
+                this.set('bestCombo', Math.max(parseInt(this.get('bestCombo') || '0'), gameState.maxCombo));
+                this.set('totalCoinsEarned', (parseInt(this.get('totalCoinsEarned') || '0') + gameState.coins));
+                
+                console.log('Game progress saved to cookies!');
+            },
+            
+            loadGameData: function() {
+                // Load coins
+                const savedCoins = this.get('plumCoins');
+                if (savedCoins) {
+                    gameState.coins = parseInt(savedCoins);
+                }
+                
+                // Load upgrade levels
+                Object.keys(upgrades).forEach(key => {
+                    const savedLevel = this.get(key + 'Level');
+                    if (savedLevel) {
+                        upgrades[key].level = parseInt(savedLevel);
+                    }
+                });
+                
+                console.log('Game progress loaded from cookies!');
+                return {
+                    totalGamesPlayed: parseInt(this.get('totalGamesPlayed') || '0'),
+                    highestScore: parseInt(this.get('highestScore') || '0'),
+                    bestCombo: parseInt(this.get('bestCombo') || '0'),
+                    totalCoinsEarned: parseInt(this.get('totalCoinsEarned') || '0')
+                };
+            },
+            
+            resetGameData: function() {
+                // Reset all game data
+                this.delete('plumCoins');
+                Object.keys(upgrades).forEach(key => {
+                    this.delete(key + 'Level');
+                });
+                this.delete('totalGamesPlayed');
+                this.delete('highestScore');
+                this.delete('bestCombo');
+                this.delete('totalCoinsEarned');
+                
+                console.log('All game data reset!');
+            }
+        };
+
+        let gameState = {
+            score: 0,
+            lives: 3,
+            coins: 0, // Will be loaded from cookies
+            level: 1,
+            combo: 0,
+            maxCombo: 0,
+            multiplier: 1.0,
+            comboTimer: 0,
+            isRunning: false,
+            activeBoosts: {
+                speed: 0,
+                size: 0,
+                magnet: 0,
+                shield: 0,
+                slowMotion: 0,
+                cursed: 0
+            },
+            player: {
+                x: 375,
+                y: 520,
+                width: 50,
+                height: 30,
+                speed: 5,
+                invulnerable: 0
+            },
+            plums: [],
+            obstacles: [],
+            specialPlums: [],
+            particles: [],
+            keys: {},
+            timers: {
+                plumSpawn: 0,
+                obstacleSpawn: 0,
+                specialSpawn: 0,
+                levelUp: 0
+            }
+        };
+        
+        let upgrades = {
+            // Movement Category
+            speed: { level: 0, maxLevel: 10 },
+            agility: { level: 0, maxLevel: 5 },
+            
+            // Basket Category  
+            size: { level: 0, maxLevel: 8 },
+            reinforcement: { level: 0, maxLevel: 5 },
+            
+            // Survival Category
+            lives: { level: 0, maxLevel: 6 },
+            shield: { level: 0, maxLevel: 8 },
+            regeneration: { level: 0, maxLevel: 3 },
+            
+            // Collection Category
+            magnet: { level: 0, maxLevel: 7 },
+            vacuum: { level: 0, maxLevel: 4 },
+            precision: { level: 0, maxLevel: 5 },
+            
+            // Economic Category
+            coinBonus: { level: 0, maxLevel: 8 },
+            comboMaster: { level: 0, maxLevel: 6 },
+            efficiency: { level: 0, maxLevel: 4 },
+            
+            // Special Category
+            timeWarp: { level: 0, maxLevel: 3 },
+            ghostMode: { level: 0, maxLevel: 4 },
+            destroyer: { level: 0, maxLevel: 5 }
+        };
+        
+        const upgradeData = {
+            // Movement
+            speed: {
+                name: "Velocity Enhancer",
+                description: "Increases basket movement speed",
+                category: "Movement",
+                baseCost: 40,
+                effect: (level) => gameState.player.speed = 5 + level * 1.2
+            },
+            agility: {
+                name: "Micro-Adjustments",
+                description: "Reduces movement delay and improves responsiveness",
+                category: "Movement", 
+                baseCost: 120,
+                effect: (level) => {} // Applied in controls
+            },
+            
+            // Basket
+            size: {
+                name: "Expansion Module",
+                description: "Increases basket collection area",
+                category: "Basket",
+                baseCost: 60,
+                effect: (level) => {
+                    gameState.player.width = 50 + level * 8;
+                    gameState.player.height = 30 + level * 3;
+                }
+            },
+            reinforcement: {
+                name: "Structural Integrity",
+                description: "Basket becomes more resistant to damage",
+                category: "Basket",
+                baseCost: 100,
+                effect: (level) => {} // Applied in collision
+            },
+            
+            // Survival
+            lives: {
+                name: "Backup Systems",
+                description: "Additional life support units",
+                category: "Survival",
+                baseCost: 80,
+                effect: (level) => gameState.lives = Math.max(gameState.lives, 3 + level)
+            },
+            shield: {
+                name: "Deflector Array",
+                description: "Chance to deflect incoming obstacles",
+                category: "Survival",
+                baseCost: 150,
+                effect: (level) => {} // Applied in collision
+            },
+            regeneration: {
+                name: "Auto-Repair Protocol",
+                description: "Slowly regenerates lost lives over time",
+                category: "Survival",
+                baseCost: 300,
+                effect: (level) => {} // Applied in game loop
+            },
+            
+            // Collection
+            magnet: {
+                name: "Magnetic Field Generator",
+                description: "Attracts plums from greater distances",
+                category: "Collection",
+                baseCost: 100,
+                effect: (level) => {} // Applied in plum update
+            },
+            vacuum: {
+                name: "Gravitational Collector",
+                description: "Creates suction effect for nearby plums",
+                category: "Collection",
+                baseCost: 250,
+                effect: (level) => {} // Applied in plum update
+            },
+            precision: {
+                name: "Targeting System",
+                description: "Improved collision detection for edge catches",
+                category: "Collection",
+                baseCost: 180,
+                effect: (level) => {} // Applied in collision
+            },
+            
+            // Economic
+            coinBonus: {
+                name: "Value Multiplier",
+                description: "Increases coins earned per plum",
+                category: "Economic",
+                baseCost: 70,
+                effect: (level) => {}
+            },
+            comboMaster: {
+                name: "Combo Sustainer",
+                description: "Maintains combos longer and increases multipliers",
+                category: "Economic", 
+                baseCost: 200,
+                effect: (level) => {}
+            },
+            efficiency: {
+                name: "Resource Optimizer",
+                description: "Chance for bonus coins on any action",
+                category: "Economic",
+                baseCost: 160,
+                effect: (level) => {}
+            },
+            
+            // Special
+            timeWarp: {
+                name: "Temporal Distortion",
+                description: "Occasionally slows down time briefly",
+                category: "Special",
+                baseCost: 400,
+                effect: (level) => {}
+            },
+            ghostMode: {
+                name: "Phase Shifter",
+                description: "Brief invulnerability periods after taking damage",
+                category: "Special",
+                baseCost: 350,
+                effect: (level) => {}
+            },
+            destroyer: {
+                name: "Obstacle Annihilator",
+                description: "Chance to destroy obstacles on contact",
+                category: "Special",
+                baseCost: 500,
+                effect: (level) => {}
+            }
+        };
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const particleCanvas = document.getElementById('particles');
+        const particleCtx = particleCanvas.getContext('2d');
+        
+        document.addEventListener('keydown', (e) => {
+            gameState.keys[e.key] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            gameState.keys[e.key] = false;
+        });
+        
+        function applyUpgrades() {
+            Object.keys(upgrades).forEach(key => {
+                if (upgradeData[key]) {
+                    upgradeData[key].effect(upgrades[key].level);
+                }
+            });
+        }
+        
+        function createParticle(x, y, type = 'coin', color = '#f5f5f5') {
+            const count = type === 'explosion' ? 15 : 5;
+            for (let i = 0; i < count; i++) {
+                gameState.particles.push({
+                    x: x + Math.random() * 20 - 10,
+                    y: y + Math.random() * 20 - 10,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8 - 3,
+                    life: 40 + Math.random() * 20,
+                    maxLife: 60,
+                    color: color,
+                    type: type,
+                    size: Math.random() * 4 + 2
+                });
+            }
+        }
+        
+        function updateParticles() {
+            particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            
+            for (let i = gameState.particles.length - 1; i >= 0; i--) {
+                const p = gameState.particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.15;
+                p.vx *= 0.98;
+                p.life--;
+                
+                const alpha = p.life / p.maxLife;
+                particleCtx.globalAlpha = alpha;
+                particleCtx.fillStyle = p.color;
+                
+                if (p.type === 'coin') {
+                    particleCtx.fillRect(p.x, p.y, p.size, p.size);
+                } else if (p.type === 'explosion') {
+                    particleCtx.beginPath();
+                    particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    particleCtx.fill();
+                } else {
+                    particleCtx.fillRect(p.x, p.y, p.size, p.size);
+                }
+                
+                if (p.life <= 0) {
+                    gameState.particles.splice(i, 1);
+                }
+            }
+            particleCtx.globalAlpha = 1;
+        }
+        
+        function drawPlayer() {
+            const p = gameState.player;
+            
+            // Apply size boost
+            let width = p.width;
+            let height = p.height;
+            let x = p.x;
+            let y = p.y;
+            
+            if (gameState.activeBoosts.size > 0) {
+                const oldWidth = width;
+                width *= 1.5;
+                height *= 1.5;
+                x -= (width - oldWidth) / 2; // Center the enlarged basket
+                y -= (height - p.height) / 2;
+            }
+            
+            // Curse visual effects
+            if (gameState.activeBoosts.cursed > 0) {
+                ctx.globalAlpha = 0.7 + 0.3 * Math.sin(Date.now() * 0.02);
+                // Red tint for curse
+                ctx.fillStyle = 'rgba(230, 57, 70, 0.2)';
+                ctx.fillRect(x - 5, y - 5, width + 10, height + 10);
+            }
+            
+            // Invulnerability effect
+            if (p.invulnerable > 0) {
+                ctx.globalAlpha = 0.5 + 0.5 * Math.sin(Date.now() * 0.02);
+            }
+            
+            // Shield effect
+            if ((upgrades.shield.level > 0 && Math.random() < 0.05) || gameState.activeBoosts.shield > 0) {
+                const shieldAlpha = gameState.activeBoosts.shield > 0 ? 0.8 : 0.3;
+                ctx.strokeStyle = `rgba(153, 50, 204, ${shieldAlpha})`;
+                ctx.lineWidth = 2 + upgrades.shield.level + (gameState.activeBoosts.shield > 0 ? 3 : 0);
+                ctx.strokeRect(x - 10, y - 10, width + 20, height + 20);
+            }
+            
+            // Basket body - gradient from light to dark
+            const gradient = ctx.createLinearGradient(x, y, x, y + height);
+            gradient.addColorStop(0, '#f0f0f0');
+            gradient.addColorStop(0.3, '#d0d0d0');
+            gradient.addColorStop(0.7, '#a0a0a0');
+            gradient.addColorStop(1, '#707070');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(x, y, width, height);
+            
+            // Basket rim
+            ctx.fillStyle = '#404040';
+            ctx.fillRect(x, y, width, 6);
+            
+            // Basket weave pattern
+            ctx.strokeStyle = '#606060';
+            ctx.lineWidth = 1;
+            const sections = Math.floor(width / 12);
+            for (let i = 1; i < sections; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x + (i * width / sections), y);
+                ctx.lineTo(x + (i * width / sections), y + height);
+                ctx.stroke();
+            }
+            
+            // Horizontal weave lines
+            for (let i = 1; i < 4; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x, y + (i * height / 4));
+                ctx.lineTo(x + width, y + (i * height / 4));
+                ctx.stroke();
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawPlum(plum) {
+            const size = plum.special ? 25 : 20;
+            const centerX = plum.x + size / 2;
+            const centerY = plum.y + size / 2;
+            
+            if (plum.special) {
+                // Special plum - animated with rings
+                const time = Date.now() * 0.005;
+                for (let i = 0; i < 3; i++) {
+                    ctx.strokeStyle = `rgba(153, 50, 204, ${0.5 - i * 0.15})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, size/2 + Math.sin(time + i) * 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            }
+            
+            // Choose colors based on plum type
+            let colors;
+            if (plum.rotten) {
+                // Rotten plum - red/brown gradient
+                colors = {
+                    highlight: '#ff6b6b',
+                    mid1: '#e63946',
+                    mid2: '#a4161a',
+                    shadow: '#660708',
+                    crease: '#370617'
+                };
+            } else {
+                // Regular purple plum
+                colors = {
+                    highlight: '#e6e6fa',
+                    mid1: '#da70d6',
+                    mid2: '#9932cc',
+                    shadow: '#4b0082',
+                    crease: '#2e0249'
+                };
+            }
+            
+            // Main plum body with proper gradient
+            const gradient = ctx.createRadialGradient(centerX - 3, centerY - 3, 2, centerX, centerY, size/2);
+            gradient.addColorStop(0, colors.highlight);
+            gradient.addColorStop(0.3, colors.mid1);
+            gradient.addColorStop(0.7, colors.mid2);
+            gradient.addColorStop(1, colors.shadow);
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, size/2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Plum crease
+            ctx.fillStyle = colors.crease;
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY - size/4, 2, size/3, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.beginPath();
+            ctx.arc(centerX - size/4, centerY - size/4, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Rotten plum additional effects
+            if (plum.rotten) {
+                // Dark spots for rotten appearance
+                ctx.fillStyle = 'rgba(103, 7, 8, 0.6)';
+                ctx.beginPath();
+                ctx.arc(centerX + size/6, centerY + size/6, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(centerX - size/5, centerY, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawObstacle(obstacle) {
+            const centerX = obstacle.x + obstacle.width / 2;
+            const centerY = obstacle.y + obstacle.height / 2;
+            
+            // Main obstacle body - dark with light edges
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            
+            // Highlight edges
+            ctx.fillStyle = '#666';
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, 3);
+            ctx.fillRect(obstacle.x, obstacle.y, 3, obstacle.height);
+            
+            // Dark shadows
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(obstacle.x + obstacle.width - 3, obstacle.y, 3, obstacle.height);
+            ctx.fillRect(obstacle.x, obstacle.y + obstacle.height - 3, obstacle.width, 3);
+            
+            // Center highlight
+            ctx.fillStyle = '#404040';
+            ctx.fillRect(obstacle.x + 6, obstacle.y + 6, obstacle.width - 12, obstacle.height - 12);
+        }
+        
+        function updatePlayer() {
+            const p = gameState.player;
+            if (p.invulnerable > 0) p.invulnerable--;
+            
+            // Apply boost effects
+            let speedMultiplier = 1 + upgrades.agility.level * 0.2;
+            let sizeMultiplier = 1;
+            
+            if (gameState.activeBoosts.speed > 0) {
+                speedMultiplier *= 2.0;
+            }
+            
+            if (gameState.activeBoosts.size > 0) {
+                sizeMultiplier = 1.5;
+            }
+            
+            // Curse effects
+            if (gameState.activeBoosts.cursed > 0) {
+                speedMultiplier *= 0.5; // Move slower
+                if (Math.random() < 0.02) { // Random movement glitches
+                    p.x += (Math.random() - 0.5) * 20;
+                    p.x = Math.max(0, Math.min(canvas.width - p.width, p.x));
+                }
+            }
+            
+            if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) {
+                p.x = Math.max(0, p.x - p.speed * speedMultiplier);
+            }
+            if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) {
+                p.x = Math.min(canvas.width - p.width, p.x + p.speed * speedMultiplier);
+            }
+        }
+        
+        function spawnPlum() {
+            const rand = Math.random();
+            let special = false;
+            let rotten = false;
+            let powerup = null;
+            
+            // 15% chance for rotten plum
+            if (rand < 0.15) {
+                rotten = true;
+            }
+            // 10% chance for special plum (if not rotten)
+            else if (rand < 0.25) {
+                special = true;
+                // Random powerup type for special plums
+                const powerups = ['speed', 'size', 'magnet', 'shield', 'slowMotion'];
+                powerup = powerups[Math.floor(Math.random() * powerups.length)];
+            }
+            
+            // Progressive speed scaling - starts very slow, gets faster with levels
+            const baseSpeed = 0.8; // Very slow starting speed
+            const levelSpeedIncrease = 0.4; // Speed increase per level
+            const randomVariation = Math.random() * 0.6; // Small random variation
+            const finalSpeed = baseSpeed + (gameState.level - 1) * levelSpeedIncrease + randomVariation;
+            
+            gameState.plums.push({
+                x: Math.random() * (canvas.width - 25),
+                y: -25,
+                width: special ? 25 : 20,
+                height: special ? 25 : 20,
+                speed: finalSpeed,
+                special: special,
+                rotten: rotten,
+                powerup: powerup,
+                value: special ? 50 : (rotten ? -20 : 10)
+            });
+        }
+        
+        function spawnObstacle() {
+            // Progressive obstacle speed - also starts slower and scales with level
+            const baseSpeed = 1.2; // Slower starting speed for obstacles too
+            const levelSpeedIncrease = 0.3; // Speed increase per level (slightly less than plums)
+            const randomVariation = Math.random() * 0.8; // Random variation
+            const finalSpeed = baseSpeed + (gameState.level - 1) * levelSpeedIncrease + randomVariation;
+            
+            gameState.obstacles.push({
+                x: Math.random() * (canvas.width - 35),
+                y: -35,
+                width: 30 + Math.random() * 10,
+                height: 30 + Math.random() * 10,
+                speed: finalSpeed
+            });
+        }
+        
+        function updatePlums() {
+            for (let i = gameState.plums.length - 1; i >= 0; i--) {
+                const plum = gameState.plums[i];
+                
+                // Magnet and vacuum effects (enhanced by boost)
+                if (upgrades.magnet.level > 0 || upgrades.vacuum.level > 0 || gameState.activeBoosts.magnet > 0) {
+                    let magnetRange = 60 + upgrades.magnet.level * 20 + upgrades.vacuum.level * 30;
+                    if (gameState.activeBoosts.magnet > 0) {
+                        magnetRange *= 2.5; // Boost effect
+                    }
+                    
+                    const dx = (gameState.player.x + gameState.player.width / 2) - (plum.x + plum.width / 2);
+                    const dy = gameState.player.y - plum.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < magnetRange) {
+                        let magnetStrength = 0.2 + upgrades.magnet.level * 0.15 + upgrades.vacuum.level * 0.25;
+                        if (gameState.activeBoosts.magnet > 0) {
+                            magnetStrength *= 2.0;
+                        }
+                        plum.x += (dx / distance) * magnetStrength;
+                        plum.y += (dy / distance) * magnetStrength * 0.4;
+                    }
+                }
+                
+                plum.y += plum.speed;
+                
+                // Enhanced collision detection with precision upgrade and size boost
+                const precisionBonus = upgrades.precision.level * 5;
+                let collisionMargin = precisionBonus;
+                
+                // Calculate actual basket dimensions for collision
+                let basketWidth = gameState.player.width;
+                let basketHeight = gameState.player.height;
+                let basketX = gameState.player.x;
+                let basketY = gameState.player.y;
+                
+                if (gameState.activeBoosts.size > 0) {
+                    const oldWidth = basketWidth;
+                    basketWidth *= 1.5;
+                    basketHeight *= 1.5;
+                    basketX -= (basketWidth - oldWidth) / 2;
+                    basketY -= (basketHeight - gameState.player.height) / 2;
+                }
+                
+                if (plum.x < basketX + basketWidth + collisionMargin &&
+                    plum.x + plum.width > basketX - collisionMargin &&
+                    plum.y < basketY + basketHeight + collisionMargin &&
+                    plum.y + plum.height > basketY - collisionMargin) {
+                    
+                    // Combo system
+                    gameState.combo++;
+                    gameState.comboTimer = 180 + upgrades.comboMaster.level * 30;
+                    gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
+                    
+                    // Calculate multiplier
+                    gameState.multiplier = 1.0 + (gameState.combo * 0.1) + (upgrades.comboMaster.level * 0.05);
+                    
+                    // Score and coins
+                    const baseScore = plum.value;
+                    const finalScore = Math.floor(baseScore * gameState.multiplier);
+                    gameState.score += finalScore;
+                    
+                    const baseCoinReward = 1 + upgrades.coinBonus.level;
+                    let coinReward = Math.floor(baseCoinReward * gameState.multiplier);
+                    
+                    // Efficiency bonus
+                    if (upgrades.efficiency.level > 0 && Math.random() < upgrades.efficiency.level * 0.15) {
+                        coinReward *= 2;
+                    }
+                    
+                    gameState.coins += coinReward;
+                    
+        function activateBoost(type) {
+            const duration = 300 + upgrades.comboMaster.level * 60; // 5-10 seconds
+            
+            switch(type) {
+                case 'speed':
+                    gameState.activeBoosts.speed = duration;
+                    break;
+                case 'size':
+                    gameState.activeBoosts.size = duration;
+                    break;
+                case 'magnet':
+                    gameState.activeBoosts.magnet = duration;
+                    break;
+                case 'shield':
+                    gameState.activeBoosts.shield = duration;
+                    break;
+                case 'slowMotion':
+                    gameState.activeBoosts.slowMotion = duration;
+                    break;
+            }
+            
+            // Visual feedback
+            createParticle(gameState.player.x + 25, gameState.player.y, 'explosion', '#9932cc');
+        }
+        
+        function activateCurse() {
+            gameState.activeBoosts.cursed = 180 + Math.random() * 120; // 3-5 seconds
+            createParticle(gameState.player.x + 25, gameState.player.y, 'explosion', '#e63946');
+        }
+        
+        function updateBoosts() {
+            // Decrease all boost timers
+            Object.keys(gameState.activeBoosts).forEach(boost => {
+                if (gameState.activeBoosts[boost] > 0) {
+                    gameState.activeBoosts[boost]--;
+                }
+            });
+            
+            // Update boost display
+            const boostDisplay = document.getElementById('boostDisplay');
+            const activeBoosts = Object.keys(gameState.activeBoosts).filter(
+                boost => gameState.activeBoosts[boost] > 0
+            );
+            
+            if (activeBoosts.length > 0) {
+                boostDisplay.innerHTML = activeBoosts.map(boost => {
+                    const timeLeft = Math.ceil(gameState.activeBoosts[boost] / 60);
+                    const color = boost === 'cursed' ? '#e63946' : '#9932cc';
+                    return `<div style="color: ${color}; font-size: 11px;">${boost.toUpperCase()}: ${timeLeft}s</div>`;
+                }).join('');
+            } else {
+                boostDisplay.innerHTML = '';
+            }
+        }
+                    if (plum.special) {
+                        createParticle(plum.x + 12, plum.y + 12, 'explosion', '#f5f5f5');
+                    }
+                    
+                    // Show combo display
+                    if (gameState.combo > 1) {
+                        const comboDisplay = document.getElementById('comboDisplay');
+                        comboDisplay.textContent = `COMBO x${gameState.combo}`;
+                        comboDisplay.style.opacity = '1';
+                        setTimeout(() => {
+                            comboDisplay.style.opacity = '0';
+                        }, 1000);
+                    }
+                    
+                    gameState.plums.splice(i, 1);
+                    continue;
+                }
+                
+                // Lose life and reset combo if plum falls off screen (except rotten plums)
+                if (plum.y > canvas.height) {
+                    if (!plum.rotten) {
+                        // Only lose life for regular and special plums
+                        gameState.lives--;
+                        gameState.combo = 0;
+                        gameState.multiplier = 1.0;
+                        createParticle(plum.x + 10, canvas.height - 20, 'explosion', '#808080');
+                        
+                        if (gameState.lives <= 0) {
+                            endGame();
+                            return;
+                        }
+                    } else {
+                        // Rotten plums just disappear - no life penalty but still lose combo
+                        gameState.combo = Math.max(0, gameState.combo - 1);
+                        gameState.multiplier = Math.max(1.0, gameState.multiplier - 0.1);
+                        createParticle(plum.x + 10, canvas.height - 20, 'explosion', '#e63946');
+                    }
+                    
+                    gameState.plums.splice(i, 1);
+                }
+            }
+        }
+        
+        function updateObstacles() {
+            for (let i = gameState.obstacles.length - 1; i >= 0; i--) {
+                const obstacle = gameState.obstacles[i];
+                obstacle.y += obstacle.speed;
+                
+                // Check collision with player (enhanced for boost effects)
+                let basketWidth = gameState.player.width;
+                let basketHeight = gameState.player.height;
+                let basketX = gameState.player.x;
+                let basketY = gameState.player.y;
+                
+                if (gameState.activeBoosts.size > 0) {
+                    const oldWidth = basketWidth;
+                    basketWidth *= 1.5;
+                    basketHeight *= 1.5;
+                    basketX -= (basketWidth - oldWidth) / 2;
+                    basketY -= (basketHeight - gameState.player.height) / 2;
+                }
+                
+                if (obstacle.x < basketX + basketWidth &&
+                    obstacle.x + obstacle.width > basketX &&
+                    obstacle.y < basketY + basketHeight &&
+                    obstacle.y + obstacle.height > basketY) {
+                    
+                    // Skip if player is invulnerable
+                    if (gameState.player.invulnerable > 0) {
+                        continue;
+                    }
+                    
+                    // Destroyer upgrade
+                    if (upgrades.destroyer.level > 0 && Math.random() < upgrades.destroyer.level * 0.2) {
+                        createParticle(obstacle.x + 15, obstacle.y + 15, 'explosion', '#f5f5f5');
+                        gameState.obstacles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Shield chance (enhanced by boost)
+                    let shieldChance = upgrades.shield.level * 0.12;
+                    if (gameState.activeBoosts.shield > 0) {
+                        shieldChance += 0.5; // 50% additional shield chance during boost
+                    }
+                    
+                    if (Math.random() < shieldChance) {
+                        createParticle(obstacle.x + 15, obstacle.y + 15, 'explosion', '#9932cc');
+                        gameState.obstacles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Reinforcement reduces damage chance
+                    const damageReduction = upgrades.reinforcement.level * 0.15;
+                    if (Math.random() < damageReduction) {
+                        createParticle(obstacle.x + 15, obstacle.y + 15, 'coin', '#a0a0a0');
+                        gameState.obstacles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Take damage
+                    gameState.lives--;
+                    gameState.combo = 0;
+                    gameState.multiplier = 1.0;
+                    gameState.obstacles.splice(i, 1);
+                    
+                    // Ghost mode invulnerability
+                    if (upgrades.ghostMode.level > 0) {
+                        gameState.player.invulnerable = 60 + upgrades.ghostMode.level * 30;
+                    }
+                    
+                    createParticle(obstacle.x + 15, obstacle.y + 15, 'explosion', '#404040');
+                    
+                    if (gameState.lives <= 0) {
+                        endGame();
+                        return;
+                    }
+                    continue;
+                }
+                
+                if (obstacle.y > canvas.height) {
+                    gameState.obstacles.splice(i, 1);
+                }
+            }
+        }
+        
+        function gameLoop() {
+            if (!gameState.isRunning) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Time warp effect or slow motion boost
+            let timeMultiplier = 1.0;
+            if (gameState.activeBoosts.slowMotion > 0) {
+                timeMultiplier = 0.4; // Slow motion boost
+                // Visual slow motion effect
+                ctx.fillStyle = 'rgba(153, 50, 204, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (upgrades.timeWarp.level > 0 && Math.random() < 0.002 * upgrades.timeWarp.level) {
+                timeMultiplier = 0.3;
+                // Visual time warp effect
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            updatePlayer();
+            updatePlums();
+            updateObstacles();
+            updateParticles();
+            updatePlayer();
+            updatePlums();
+            updateObstacles();
+            updateParticles();
+            
+            // Combo timer
+            if (gameState.combo > 0) {
+                gameState.comboTimer--;
+                if (gameState.comboTimer <= 0) {
+                    gameState.combo = 0;
+                    gameState.multiplier = 1.0;
+                }
+            }
+            
+            // Update boost timers and display
+            Object.keys(gameState.activeBoosts).forEach(boost => {
+                if (gameState.activeBoosts[boost] > 0) {
+                    gameState.activeBoosts[boost]--;
+                }
+            });
+            
+            const boostDisplay = document.getElementById('boostDisplay');
+            const activeBoosts = Object.keys(gameState.activeBoosts).filter(
+                boost => gameState.activeBoosts[boost] > 0
+            );
+            
+            if (activeBoosts.length > 0) {
+                boostDisplay.innerHTML = activeBoosts.map(boost => {
+                    const timeLeft = Math.ceil(gameState.activeBoosts[boost] / 60);
+                    const color = boost === 'cursed' ? '#e63946' : '#9932cc';
+                    return `<div style="color: ${color}; font-size: 11px;">${boost.toUpperCase()}: ${timeLeft}s</div>`;
+                }).join('');
+            } else {
+                boostDisplay.innerHTML = '';
+            }
+            
+            // Regeneration
+            if (upgrades.regeneration.level > 0 && gameState.lives < 10) {
+                if (Math.random() < 0.001 * upgrades.regeneration.level) {
+                    gameState.lives++;
+                    createParticle(gameState.player.x + 25, gameState.player.y, 'coin', '#f5f5f5');
+                }
+            }
+            
+            // Spawn objects
+            gameState.timers.plumSpawn++;
+            const plumSpawnRate = Math.max(20, 60 - gameState.level * 3) * timeMultiplier;
+            if (gameState.timers.plumSpawn > plumSpawnRate) {
+                spawnPlum();
+                gameState.timers.plumSpawn = 0;
+            }
+            
+            gameState.timers.obstacleSpawn++;
+            const obstacleSpawnRate = Math.max(40, 120 - gameState.level * 8) * timeMultiplier;
+            if (gameState.timers.obstacleSpawn > obstacleSpawnRate) {
+                spawnObstacle();
+                gameState.timers.obstacleSpawn = 0;
+            }
+            
+            // Level progression
+            gameState.timers.levelUp++;
+            const levelProgress = (gameState.timers.levelUp % 1800) / 1800;
+            document.getElementById('levelProgress').style.width = (levelProgress * 100) + '%';
+            
+            if (gameState.timers.levelUp > 1800) { // 30 seconds at 60fps
+                gameState.level++;
+                gameState.timers.levelUp = 0;
+                
+                // Level up effects with speed indication
+                for (let i = 0; i < 20; i++) {
+                    createParticle(
+                        Math.random() * canvas.width,
+                        Math.random() * canvas.height,
+                        'explosion',
+                        '#f5f5f5'
+                    );
+                }
+                
+                // Show level up message briefly
+                ctx.fillStyle = '#f5f5f5';
+                ctx.font = 'bold 24px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText(`LEVEL ${gameState.level} - SPEED INCREASED!`, canvas.width/2, canvas.height/2);
+                ctx.textAlign = 'left';
+            }
+            
+            // Draw everything
+            drawPlayer();
+            gameState.plums.forEach(drawPlum);
+            gameState.obstacles.forEach(drawObstacle);
+            
+            // Update UI
+            document.getElementById('score').textContent = gameState.score.toLocaleString();
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('coins').textContent = gameState.coins.toLocaleString();
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('combo').textContent = gameState.combo;
+            document.getElementById('multiplier').textContent = 'x' + gameState.multiplier.toFixed(1);
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function startGame() {
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.level = 1;
+            gameState.combo = 0;
+            gameState.maxCombo = 0;
+            gameState.multiplier = 1.0;
+            gameState.comboTimer = 0;
+            gameState.isRunning = true;
+            gameState.activeBoosts = {
+                speed: 0,
+                size: 0,
+                magnet: 0,
+                shield: 0,
+                slowMotion: 0,
+                cursed: 0
+            };
+            gameState.plums = [];
+            gameState.obstacles = [];
+            gameState.particles = [];
+            gameState.timers = { plumSpawn: 0, obstacleSpawn: 0, specialSpawn: 0, levelUp: 0 };
+            gameState.player = {
+                x: 375,
+                y: 520,
+                width: 50,
+                height: 30,
+                speed: 5,
+                invulnerable: 0
+            };
+            
+            applyUpgrades();
+            
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('upgradeScreen').style.display = 'none';
+            gameLoop();
+        }
+        
+        function endGame() {
+            gameState.isRunning = false;
+            const coinsEarned = Math.floor(gameState.score / 20);
+            gameState.coins += coinsEarned;
+            
+            // Save to cookies instead of localStorage
+            CookieManager.saveGameData();
+            
+            document.getElementById('finalScore').textContent = gameState.score.toLocaleString();
+            document.getElementById('coinsEarned').textContent = coinsEarned.toLocaleString();
+            document.getElementById('bestCombo').textContent = gameState.maxCombo;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        function showUpgrades() {
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('upgradeScreen').style.display = 'block';
+            document.getElementById('totalCoins').textContent = gameState.coins.toLocaleString();
+            
+            const upgradeList = document.getElementById('upgradeList');
+            upgradeList.innerHTML = '';
+            
+            // Group upgrades by category
+            const categories = {};
+            Object.keys(upgradeData).forEach(key => {
+                const category = upgradeData[key].category;
+                if (!categories[category]) categories[category] = [];
+                categories[category].push(key);
+            });
+            
+            Object.keys(categories).forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'upgrade-category';
+                categoryDiv.innerHTML = `<h3>◈ ${category.toUpperCase()} SYSTEMS ◈</h3>`;
+                
+                categories[category].forEach(key => {
+                    const upgrade = upgradeData[key];
+                    const level = upgrades[key].level;
+                    const maxLevel = upgrades[key].maxLevel;
+                    const cost = Math.floor(upgrade.baseCost * Math.pow(1.6, level));
+                    
+                    const div = document.createElement('div');
+                    
+                    if (level >= maxLevel) {
+                        div.className = 'upgrade-item maxed';
+                        div.innerHTML = `
+                            <div class="upgrade-description">
+                                <div class="upgrade-name">${upgrade.name}</div>
+                                <div class="upgrade-effect">${upgrade.description}</div>
+                                <div class="upgrade-level">MAXED OUT [${level}/${maxLevel}]</div>
+                            </div>
+                            <div class="upgrade-cost">◼ COMPLETE ◼</div>
+                        `;
+                    } else {
+                        div.className = `upgrade-item ${gameState.coins >= cost ? 'affordable' : 'unaffordable'}`;
+                        div.innerHTML = `
+                            <div class="upgrade-description">
+                                <div class="upgrade-name">${upgrade.name}</div>
+                                <div class="upgrade-effect">${upgrade.description}</div>
+                                <div class="upgrade-level">Level: ${level}/${maxLevel}</div>
+                            </div>
+                            <div class="upgrade-cost">${cost.toLocaleString()}</div>
+                        `;
+                        
+                        if (gameState.coins >= cost) {
+                            div.onclick = () => buyUpgrade(key, cost);
+                        }
+                    }
+                    
+                    categoryDiv.appendChild(div);
+                });
+                
+                upgradeList.appendChild(categoryDiv);
+            });
+        }
+        
+        function buyUpgrade(key, cost) {
+            if (gameState.coins >= cost && upgrades[key].level < upgrades[key].maxLevel) {
+                gameState.coins -= cost;
+                upgrades[key].level++;
+                
+                // Save to cookies instead of localStorage
+                CookieManager.saveGameData();
+                
+                // Purchase effect
+                for (let i = 0; i < 15; i++) {
+                    createParticle(400, 300, 'coin', '#f5f5f5');
+                }
+                
+                showUpgrades(); // Refresh the upgrade screen
+            }
+        }
+        
+        function hideUpgrades() {
+            document.getElementById('upgradeScreen').style.display = 'none';
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        function showStats() {
+            const stats = CookieManager.loadGameData();
+            document.getElementById('upgradeScreen').style.display = 'none';
+            document.getElementById('statsScreen').style.display = 'block';
+            
+            const upgradeProgress = Object.keys(upgrades).filter(key => upgrades[key].level > 0).length;
+            const totalUpgrades = Object.keys(upgrades).length;
+            const maxedUpgrades = Object.keys(upgrades).filter(key => upgrades[key].level >= upgrades[key].maxLevel).length;
+            
+            document.getElementById('statsContent').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; color: #e5e5e5;">
+                    <div>
+                        <h3 style="color: #f5f5f5; border-bottom: 1px solid #666; padding-bottom: 5px;">PERFORMANCE</h3>
+                        <p><strong>Games Played:</strong> ${stats.totalGamesPlayed}</p>
+                        <p><strong>Highest Score:</strong> ${stats.highestScore.toLocaleString()}</p>
+                        <p><strong>Best Combo:</strong> ${stats.bestCombo}</p>
+                        <p><strong>Current Coins:</strong> ${gameState.coins.toLocaleString()}</p>
+                        <p><strong>Total Coins Earned:</strong> ${stats.totalCoinsEarned.toLocaleString()}</p>
+                    </div>
+                    <div>
+                        <h3 style="color: #f5f5f5; border-bottom: 1px solid #666; padding-bottom: 5px;">PROGRESS</h3>
+                        <p><strong>Upgrades Researched:</strong> ${upgradeProgress}/${totalUpgrades}</p>
+                        <p><strong>Systems Maxed:</strong> ${maxedUpgrades}/${totalUpgrades}</p>
+                        <p><strong>Completion:</strong> ${Math.round((upgradeProgress/totalUpgrades)*100)}%</p>
+                        <p><strong>Cookie Storage:</strong> Active</p>
+                        <p><strong>Data Persistence:</strong> 30 Days</p>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(145deg, #0d0d0d, #1d1d1d); border: 1px solid #555; border-radius: 10px;">
+                    <h4 style="color: #f5f5f5; margin: 0 0 10px 0;">TOP UPGRADES</h4>
+                    ${Object.keys(upgrades)
+                        .filter(key => upgrades[key].level > 0)
+                        .sort((a, b) => upgrades[b].level - upgrades[a].level)
+                        .slice(0, 5)
+                        .map(key => `<div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                            <span>${upgradeData[key].name}</span>
+                            <span>Level ${upgrades[key].level}</span>
+                        </div>`)
+                        .join('') || '<p style="text-align: center; color: #999;">No upgrades purchased yet</p>'}
+                </div>
+            `;
+        }
+        
+        function hideStats() {
+            document.getElementById('statsScreen').style.display = 'none';
+            document.getElementById('upgradeScreen').style.display = 'block';
+        }
+        
+        function resetProgress() {
+            if (confirm('⚠️ WARNING ⚠️\n\nThis will permanently delete ALL your progress including:\n• All coins and upgrades\n• Game statistics\n• Saved data\n\nThis action cannot be undone!\n\nAre you sure you want to continue?')) {
+                if (confirm('🚨 FINAL WARNING 🚨\n\nYou are about to lose everything!\nThis is your last chance to cancel.\n\nProceed with complete data wipe?')) {
+                    // Reset everything
+                    CookieManager.resetGameData();
+                    
+                    // Reset game state
+                    gameState.coins = 0;
+                    Object.keys(upgrades).forEach(key => {
+                        upgrades[key].level = 0;
+                    });
+                    
+                    // Visual feedback
+                    for (let i = 0; i < 50; i++) {
+                        createParticle(
+                            Math.random() * 800,
+                            Math.random() * 600,
+                            'explosion',
+                            '#e63946'
+                        );
+                    }
+                    
+                    alert('🗑️ All data has been wiped clean!\n\nStarting fresh with a new harvester...');
+                    
+                    // Refresh the upgrade screen
+                    showUpgrades();
+                }
+            }
+        }
+        
+        // Initialize and start
+        CookieManager.loadGameData(); // Load saved progress
+        applyUpgrades();
+        startGame();
+    </script>
+</body>
+</html>
