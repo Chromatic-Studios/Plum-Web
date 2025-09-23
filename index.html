@@ -161,16 +161,26 @@
       border: none;
     }
 
-    /* Clickable game logo */
-    .logo-container {
-      cursor: pointer;
-      margin: 20px;
+    /* App Icon Frame */
+    .app-frame {
       display: inline-block;
+      padding: 20px;
+      background: #5f2a77;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+      transition: transform 0.2s, background 0.3s;
+      cursor: pointer;
     }
 
-    .logo-container img {
-      max-width: 100px;
+    .app-frame:hover {
+      background: #7d3c92;
+      transform: scale(1.05);
+    }
+
+    .app-frame img {
+      max-width: 120px;
       height: auto;
+      display: block;
     }
   </style>
 </head>
@@ -211,8 +221,7 @@
 
       <section id="games" class="tab card" style="display:none;margin-top:16px">
         <h1>Games</h1>
-        <p>Click the logo to launch Monochrome Plum Harvest:</p>
-        <div class="logo-container" onclick="openFrame()">
+        <div class="app-frame" onclick="openFrame()">
           <img src="assets/monochromeplumharvestlogo.png" alt="Monochrome Plum Harvest Logo">
         </div>
       </section>
