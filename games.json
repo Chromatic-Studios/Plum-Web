@@ -4,4 +4,9 @@
     "file": "monochromeplumharvest.html",
     "logo": "monochromeplumharvestlogo.png"
   }
+  {
+    "name": "PlumaGotchi",
+    "file": "plumagotchi.html",
+    "logo": "plumagotchilogo.png"
+  }
 ]
