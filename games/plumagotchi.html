@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Plumagotchi</title>
+  <style>
+    /* Fullscreen purple kitchen */
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #fff;
+      text-align: center;
+      background: linear-gradient(to bottom, #8b5fcf, #c898ff); /* purple gradient */
+    }
+
+    #scene {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    /* Table */
+    #table {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      background: url("assets/kitchen_table.png") center bottom/contain no-repeat;
+    }
+
+    /* Plum sits on the table with idle bounce */
+    #plum {
+      position: absolute;
+      bottom: 100px; /* above the table */
+      width: 160px;
+      transition: transform 0.2s, opacity 0.2s;
+      animation: idleBounce 2s infinite ease-in-out;
+    }
+
+    #plum.happy {
+      transform: scale(1.2) rotate(10deg);
+    }
+
+    #plum.sad {
+      opacity: 0.7;
+    }
+
+    /* idle bounce animation */
+    @keyframes idleBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* HUD with stats + actions */
+    #hud {
+      position: absolute;
+      top: 10px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    #stats {
+      background: rgba(75, 0, 130, 0.5);
+      padding: 10px 15px;
+      border-radius: 12px;
+      font-size: 1.1em;
+      border: 2px solid #d4a5ff;
+    }
+
+    #actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      background: rgba(75, 0, 130, 0.5);
+      padding: 10px 15px;
+      border-radius: 12px;
+      border: 2px solid #d4a5ff;
+    }
+
+    #actions button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 10px;
+      background: #fff;
+      color: #5a189a;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #actions button:hover {
+      background: #ffe0ff;
+    }
+
+    /* Floating message, hidden by default */
+    #messages {
+      position: absolute;
+      bottom: 320px;
+      font-size: 1.3em;
+      background: rgba(75,0,130,0.5);
+      padding: 5px 12px;
+      border-radius: 12px;
+      border: 2px solid #d4a5ff;
+      display: none; /* hidden initially */
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="scene">
+    <div id="hud">
+      <div id="stats">
+        Hunger: <span id="hunger">100</span> |
+        Happiness: <span id="happiness">100</span> |
+        Energy: <span id="energy">100</span>
+      </div>
+      <div id="actions">
+        <button onclick="feedPlum()">🍽️ Feed</button>
+        <button onclick="petPlum()">🤲 Pet</button>
+        <button onclick="watchTV()">📺 TV</button>
+        <button onclick="restPlum()">💤 Rest</button>
+      </div>
+    </div>
+
+    <div id="messages"></div>
+
+    <img id="plum" src="assets/plum_idle.gif" alt="Cute Plum">
+    <div id="table"></div>
+  </div>
+
+  <script>
+    let hunger = 100;
+    let happiness = 100;
+    let energy = 100;
+
+    const hungerEl = document.getElementById("hunger");
+    const happinessEl = document.getElementById("happiness");
+    const energyEl = document.getElementById("energy");
+    const plumEl = document.getElementById("plum");
+    const messages = document.getElementById("messages");
+
+    const animations = {
+      idle: "assets/plum_idle.gif",
+      eating: "assets/plum_eating.gif",
+      petting: "assets/plum_petting.gif",
+      tv: "assets/plum_tv.gif",
+      resting: "assets/plum_rest.gif"
+    };
+
+    function updateStats() {
+      hungerEl.textContent = hunger;
+      happinessEl.textContent = happiness;
+      energyEl.textContent = energy;
+
+      if (happiness < 40) {
+        plumEl.classList.add("sad");
+        plumEl.classList.remove("happy");
+      } else if (happiness > 80) {
+        plumEl.classList.add("happy");
+        plumEl.classList.remove("sad");
+      } else {
+        plumEl.classList.remove("happy", "sad");
+      }
+    }
+
+    function showMessage(msg) {
+      messages.textContent = msg;
+      messages.style.display = "block"; // show box
+      setTimeout(() => messages.style.display = "none", 2000); // hide after 2 sec
+    }
+
+    function setAnimation(type, duration = 2000) {
+      plumEl.src = animations[type];
+      // temporarily disable idle bounce during action
+      plumEl.style.animation = "none";
+      setTimeout(() => plumEl.src = animations.idle, duration);
+      setTimeout(() => plumEl.style.animation = "idleBounce 2s infinite ease-in-out", duration);
+    }
+
+    function feedPlum() {
+      if (hunger < 100) hunger = Math.min(hunger + 20, 100);
+      showMessage(hunger < 100 ? "The plum enjoyed the food! 🍽️" : "The plum is already full!");
+      setAnimation("eating");
+      updateStats();
+    }
+
+    function petPlum() {
+      happiness = Math.min(happiness + 15, 100);
+      showMessage("The plum feels loved! 🤲");
+      setAnimation("petting");
+      updateStats();
+    }
+
+    function watchTV() {
+      happiness = Math.min(happiness + 10, 100);
+      energy = Math.max(energy - 10, 0);
+      showMessage("The plum enjoyed a TV show! 📺");
+      setAnimation("tv", 3000);
+      updateStats();
+    }
+
+    function restPlum() {
+      energy = Math.min(energy + 20, 100);
+      hunger = Math.max(hunger - 5, 0);
+      showMessage("The plum is resting... 😴");
+      setAnimation("resting", 4000);
+      updateStats();
+    }
+
+    // Passive stat decrease over time
+    setInterval(() => {
+      hunger = Math.max(hunger - 2, 0);
+      happiness = Math.max(happiness - 1, 0);
+      energy = Math.max(energy - 1, 0);
+      updateStats();
+      if (hunger === 0 || energy === 0) showMessage("Your plum needs attention! ⚠️");
+    }, 5000);
+
+    updateStats();
+  </script>
+</body>
+</html>
