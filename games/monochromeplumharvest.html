@@ -1216,7 +1216,7 @@
             let rotten = false;
             let golden = false;
             let powerup = null;
-            let value = 10;
+            let value = 100;
             
             // Plum type probabilities
             if (rand < 0.08) { // 8% chance for golden plum
@@ -1601,7 +1601,7 @@
             
             // Spawn objects
             gameState.timers.plumSpawn++;
-            const plumSpawnRate = Math.max(20, 60 - gameState.level * 3) * timeMultiplier;
+            const plumSpawnRate = Math.max(50, 150 - gameState.level * 3) * timeMultiplier;
             if (gameState.timers.plumSpawn > plumSpawnRate) {
                 spawnPlum();
                 gameState.timers.plumSpawn = 0;
