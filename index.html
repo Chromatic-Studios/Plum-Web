@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #2e003e; /* Deep plum background */
+      background: #2e003e;
       color: white;
       margin: 0;
     }
@@ -15,46 +15,26 @@
     /* Intro screen */
     #intro {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
       font-size: 10rem;
       font-weight: bold;
-      color: white;
       background: #2e003e;
       z-index: 9999;
       opacity: 1;
       transition: opacity 1s;
     }
-
     #intro span {
       opacity: 0;
       display: inline-block;
       animation: typingLetter 0.3s forwards;
       animation-delay: calc(var(--i) * 0.15s);
     }
-
     @keyframes typingLetter {
       to { opacity: 1; }
-    }
-
-    /* Main content */
-    .content {
-      display: none;
-      padding: 20px;
-      background: #3c1c55;
-      height: 100vh;
-      color: white;
-    }
-
-    .brand {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 20px;
     }
 
     /* Sidebar */
@@ -63,11 +43,17 @@
       background: #3c1c55;
       color: white;
       padding: 20px;
-      box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 2px 0 12px rgba(0,0,0,0.1);
       height: 100%;
       position: fixed;
     }
-
+    .brand {
+      margin-bottom: 20px;
+    }
+    .brand img {
+      max-width: 100%;
+      height: auto;
+    }
     .nav button {
       background: #5f2a77;
       color: white;
@@ -80,52 +66,62 @@
       font-weight: bold;
       transition: background 0.3s;
     }
-
     .nav button:hover {
       background: #d1a3d1;
     }
 
-    /* Content Area */
-    .content-area {
-      margin-left: 220px;
-      padding: 20px;
-    }
+    /* Content */
+    .content { display: none; padding: 20px; height: 100vh; }
+    .content-area { margin-left: 220px; padding: 20px; }
 
-    /* Responsive sidebar */
+    /* Responsive */
     @media (max-width: 760px) {
-      .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-      }
-      .content-area {
-        margin-left: 0;
-      }
+      .sidebar { width: 100%; height: auto; position: relative; }
+      .content-area { margin-left: 0; }
     }
 
-    /* Game Frame */
+    /* Game icon grid */
+    #games-list {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .app-frame {
+      width: 120px;
+      height: 120px;
+      background: #3c1c55;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+    .app-frame:hover {
+      transform: scale(1.05);
+      background: #5f2a77;
+    }
+    .app-frame img {
+      max-width: 80%;
+      max-height: 80%;
+    }
+
+    /* Frame container */
     .frame-container {
       display: none;
       position: fixed;
-      top: 10%;
-      left: 10%;
-      width: 80%;
-      height: 80%;
+      top: 10%; left: 10%;
+      width: 80%; height: 80%;
       background: #3c1c55;
       z-index: 10000;
       border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
     }
-
     .frame-container.fullscreen {
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       border-radius: 0;
     }
-
     .frame-header {
       display: flex;
       justify-content: space-between;
@@ -136,51 +132,21 @@
       border-top-left-radius: 10px;
       border-top-right-radius: 10px;
     }
-
-    .frame-header h2 {
-      margin: 0;
-    }
-
+    .frame-header h2 { margin: 0; }
     .frame-header .btn {
       background: #d1a3d1;
       border: none;
       padding: 5px 10px;
       cursor: pointer;
       border-radius: 5px;
-      margin-left: 5px;
-      font-weight: bold;
+      margin-left: 8px;
     }
-
-    .frame-header .btn:hover {
-      background: #bb7db1;
-    }
+    .frame-header .btn:hover { background: #bb7db1; }
 
     iframe {
       width: 100%;
       height: calc(100% - 40px);
       border: none;
-    }
-
-    /* App Icon Frame */
-    .app-frame {
-      display: inline-block;
-      padding: 20px;
-      background: #5f2a77;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-      transition: transform 0.2s, background 0.3s;
-      cursor: pointer;
-    }
-
-    .app-frame:hover {
-      background: #7d3c92;
-      transform: scale(1.05);
-    }
-
-    .app-frame img {
-      max-width: 120px;
-      height: auto;
-      display: block;
     }
   </style>
 </head>
@@ -201,7 +167,7 @@
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="brand">
-      <img src="assets/icon.png" alt="Logo" style="max-width: 100%; height: auto;">
+      <img src="assets/icon.png" alt="Logo">
     </div>
     <nav class="nav" role="navigation" aria-label="Main navigation">
       <button data-tab="home">Home</button>
@@ -211,19 +177,17 @@
     </nav>
   </div>
 
-  <!-- Main Content -->
+  <!-- Content -->
   <div class="content">
     <div class="content-area">
       <section id="home" class="tab card">
         <h1>Home</h1>
-        <p>Welcome — this is the main dashboard area. Use the left sidebar to switch sections.</p>
+        <p>Welcome — this is the main dashboard area.</p>
       </section>
 
       <section id="games" class="tab card" style="display:none;margin-top:16px">
         <h1>Games</h1>
-        <div class="app-frame" onclick="openFrame()">
-          <img src="assets/monochromeplumharvestlogo.png" alt="Monochrome Plum Harvest Logo">
-        </div>
+        <div id="games-list"></div>
       </section>
 
       <section id="proxy" class="tab card" style="display:none;margin-top:16px">
@@ -241,19 +205,18 @@
   <!-- Game Frame -->
   <div id="frame" class="frame-container">
     <div class="frame-header">
-      <h2>Monochrome Plum Harvest</h2>
+      <h2 id="frame-title">Game</h2>
       <div>
         <button class="btn" onclick="toggleFullscreen()">Fullscreen</button>
-        <button class="btn" onclick="closeFrame()">✖</button>
+        <button class="btn" onclick="closeFrame()">X</button>
       </div>
     </div>
-    <iframe src="games/monochromeplumharvest.html"></iframe>
+    <iframe id="frame-iframe"></iframe>
   </div>
 
   <script>
-    // Intro fade-out
+    // Intro animation
     setTimeout(() => {
-      document.getElementById('intro').style.transition = 'opacity 2s';
       document.getElementById('intro').style.opacity = '0';
       setTimeout(() => {
         document.getElementById('intro').style.display = 'none';
@@ -261,25 +224,7 @@
       }, 2000);
     }, 2000);
 
-    // Open game frame
-    function openFrame() {
-      document.getElementById('frame').style.display = 'block';
-    }
-
-    // Close game frame
-    function closeFrame() {
-      const frame = document.getElementById('frame');
-      frame.style.display = 'none';
-      frame.classList.remove('fullscreen'); // reset fullscreen if active
-    }
-
-    // Toggle fullscreen
-    function toggleFullscreen() {
-      const frame = document.getElementById('frame');
-      frame.classList.toggle('fullscreen');
-    }
-
-    // Sidebar tab navigation
+    // Tab navigation
     document.querySelectorAll('.nav button').forEach(button => {
       button.addEventListener('click', function() {
         let target = this.getAttribute('data-tab');
@@ -288,7 +233,39 @@
         });
       });
     });
-  </script>
 
+    // Frame controls
+    function openFrame(name, file) {
+      document.getElementById('frame').style.display = 'block';
+      document.getElementById('frame-title').textContent = name;
+      document.getElementById('frame-iframe').src = file;
+    }
+    function toggleFullscreen() {
+      document.getElementById('frame').classList.toggle('fullscreen');
+    }
+    function closeFrame() {
+      document.getElementById('frame').style.display = 'none';
+      document.getElementById('frame-iframe').src = "";
+    }
+
+    // Load games from JSON
+    fetch("games.json")
+      .then(res => res.json())
+      .then(games => {
+        const container = document.getElementById("games-list");
+        games.forEach(game => {
+          const frame = document.createElement("div");
+          frame.className = "app-frame";
+          frame.onclick = () => openFrame(game.name, "games/" + game.file);
+
+          const img = document.createElement("img");
+          img.src = "assets/" + game.logo;
+          img.alt = game.name + " Logo";
+
+          frame.appendChild(img);
+          container.appendChild(frame);
+        });
+      });
+  </script>
 </body>
 </html>
