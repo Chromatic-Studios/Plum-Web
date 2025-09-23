@@ -141,15 +141,17 @@
       margin: 0;
     }
 
-    .frame-header .fullscreen-btn {
+    .frame-header .btn {
       background: #d1a3d1;
       border: none;
       padding: 5px 10px;
       cursor: pointer;
       border-radius: 5px;
+      margin-left: 5px;
+      font-weight: bold;
     }
 
-    .frame-header .fullscreen-btn:hover {
+    .frame-header .btn:hover {
       background: #bb7db1;
     }
 
@@ -211,7 +213,7 @@
         <h1>Games</h1>
         <p>Click the logo to launch Monochrome Plum Harvest:</p>
         <div class="logo-container" onclick="openFrame()">
-          <img src="assets/icon.png" alt="Monochrome Plum Harvest Logo">
+          <img src="assets/monochromeplumharvestlogo.png" alt="Monochrome Plum Harvest Logo">
         </div>
       </section>
 
@@ -231,7 +233,10 @@
   <div id="frame" class="frame-container">
     <div class="frame-header">
       <h2>Monochrome Plum Harvest</h2>
-      <button class="fullscreen-btn" onclick="toggleFullscreen()">Fullscreen</button>
+      <div>
+        <button class="btn" onclick="toggleFullscreen()">Fullscreen</button>
+        <button class="btn" onclick="closeFrame()">✖</button>
+      </div>
     </div>
     <iframe src="games/monochromeplumharvest.html"></iframe>
   </div>
@@ -250,6 +255,13 @@
     // Open game frame
     function openFrame() {
       document.getElementById('frame').style.display = 'block';
+    }
+
+    // Close game frame
+    function closeFrame() {
+      const frame = document.getElementById('frame');
+      frame.style.display = 'none';
+      frame.classList.remove('fullscreen'); // reset fullscreen if active
     }
 
     // Toggle fullscreen
