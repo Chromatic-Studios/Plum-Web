@@ -1,18 +1,4 @@
-        function gameLoop(currentTime = performance.now()) {
-            if (!gameState.isRunning) return;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Time effects
-            let timeMultiplier = 1.0;
-            if (gameState.activeBoosts.slowMotion > 0) {
-                timeMultiplier = 0.4;
-                ctx.fillStyle = 'rgba(153, 50, 204, 0.05)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            } else if (upgrades.timeWarp.level > 0 && Math.random() < 0.002 * upgrades.timeWarp.level) {
-                timeMultiplier = 0.3;
-                ctx.fillStyle = 'rgba(218, 112, 214, 0.1)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -398,6 +384,7 @@
                 <p>Best Combo: <span id="bestCombo">0</span></p>
                 <button onclick="showUpgrades()">◈ UPGRADE FACILITY ◈</button>
                 <button onclick="startGame()">◈ RESTART HARVEST ◈</button>
+                <button onclick="resetSave()" style="background: linear-gradient(145deg, #e63946, #b71c1c); margin-top: 20px;">◈ RESET ALL PROGRESS ◈</button>
             </div>
             
             <div id="upgradeScreen">
@@ -506,42 +493,31 @@
             lastTime: performance.now()
         };
         
-        // FPS Control Functions
-        function changeFPS(value) {
-            const fps = parseInt(value);
-            gameState.targetFPS = fps;
-            
-            if (fps === 0) {
-                gameState.frameInterval = 0; // Unlimited FPS
-            } else {
-                gameState.frameInterval = 1000 / fps;
-            }
-            
-            // Cancel current animation frame and restart with new FPS
-            if (gameState.animationId) {
-                cancelAnimationFrame(gameState.animationId);
-            }
-            
-            if (gameState.isRunning) {
-                gameLoop();
-            }
+        // Cookie-based save system
+        function setCookie(name, value, days = 365) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
         }
         
-        // Save system using in-memory storage (since localStorage not available)
-        let saveData = {
-            coins: 0,
-            totalCoins: 0,
-            highScore: 0,
-            highCombo: 0,
-            lifetimeCoins: 0,
-            sessionMaxCombo: 0,
-            sessionPlums: 0,
-            sessionGames: 0,
-            upgrades: {}
-        };
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.indexOf(nameEQ) === 0) {
+                    return decodeURIComponent(cookie.substring(nameEQ.length));
+                }
+            }
+            return null;
+        }
+        
+        function deleteCookie(name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+        }
         
         function saveGame() {
-            saveData = {
+            const saveData = {
                 coins: gameState.coins,
                 totalCoins: gameState.totalCoins,
                 highScore: gameState.highScore,
@@ -552,24 +528,56 @@
                 sessionGames: gameState.sessionGames,
                 upgrades: JSON.parse(JSON.stringify(upgrades))
             };
+            setCookie('plumHarvestSave', JSON.stringify(saveData));
         }
         
         function loadGame() {
-            gameState.coins = saveData.coins || 0;
-            gameState.totalCoins = saveData.totalCoins || 0;
-            gameState.highScore = saveData.highScore || 0;
-            gameState.highCombo = saveData.highCombo || 0;
-            gameState.lifetimeCoins = saveData.lifetimeCoins || 0;
-            gameState.sessionMaxCombo = saveData.sessionMaxCombo || 0;
-            gameState.sessionPlums = saveData.sessionPlums || 0;
-            gameState.sessionGames = saveData.sessionGames || 0;
-            
-            if (saveData.upgrades) {
-                Object.keys(saveData.upgrades).forEach(key => {
-                    if (upgrades[key]) {
-                        upgrades[key].level = saveData.upgrades[key].level || 0;
+            const savedData = getCookie('plumHarvestSave');
+            if (savedData) {
+                try {
+                    const saveData = JSON.parse(savedData);
+                    gameState.coins = saveData.coins || 0;
+                    gameState.totalCoins = saveData.totalCoins || 0;
+                    gameState.highScore = saveData.highScore || 0;
+                    gameState.highCombo = saveData.highCombo || 0;
+                    gameState.lifetimeCoins = saveData.lifetimeCoins || 0;
+                    gameState.sessionMaxCombo = saveData.sessionMaxCombo || 0;
+                    gameState.sessionPlums = saveData.sessionPlums || 0;
+                    gameState.sessionGames = saveData.sessionGames || 0;
+                    
+                    if (saveData.upgrades) {
+                        Object.keys(saveData.upgrades).forEach(key => {
+                            if (upgrades[key]) {
+                                upgrades[key].level = saveData.upgrades[key].level || 0;
+                            }
+                        });
                     }
+                } catch (e) {
+                    console.log('Error loading save data:', e);
+                }
+            }
+        }
+        
+        function resetSave() {
+            if (confirm('Are you sure you want to reset ALL progress? This cannot be undone!')) {
+                deleteCookie('plumHarvestSave');
+                // Reset all game state
+                gameState.coins = 0;
+                gameState.totalCoins = 0;
+                gameState.highScore = 0;
+                gameState.highCombo = 0;
+                gameState.lifetimeCoins = 0;
+                gameState.sessionMaxCombo = 0;
+                gameState.sessionPlums = 0;
+                gameState.sessionGames = 0;
+                
+                // Reset upgrades
+                Object.keys(upgrades).forEach(key => {
+                    upgrades[key].level = 0;
                 });
+                
+                updateUI();
+                alert('All progress has been reset!');
             }
         }
         
@@ -1479,6 +1487,10 @@
                     
                     createParticle(obstacle.x + 15, obstacle.y + 15, 'explosion', '#404040');
                     
+                    if (gameState.lives <= 0) {
+                        endGame();
+                        return;
+                    }
                 }
                 
                 if (obstacle.y > canvas.height) {
@@ -1509,7 +1521,7 @@
             document.getElementById('sessionPlums').textContent = gameState.sessionPlums;
             document.getElementById('sessionGames').textContent = gameState.sessionGames;
             
-            // Update technical stats (new)
+            // Update technical stats
             const currentTime = performance.now();
             gameState.frameCount++;
             if (currentTime - gameState.lastTime >= 1000) {
@@ -1543,21 +1555,6 @@
         
         function gameLoop(currentTime = performance.now()) {
             if (!gameState.isRunning) return;
-            
-            // FPS limiting
-            if (gameState.frameInterval > 0) {
-                const elapsed = currentTime - gameState.lastFrameTime;
-                
-                if (elapsed < gameState.frameInterval) {
-                    gameState.animationId = requestAnimationFrame(gameLoop);
-                    return;
-                }
-                
-                gameState.lastFrameTime = currentTime - (elapsed % gameState.frameInterval);
-            } else {
-                // Unlimited FPS mode
-                gameState.lastFrameTime = currentTime;
-            }
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
@@ -1647,7 +1644,7 @@
             updateUI();
             saveGame();
             
-            gameState.animationId = requestAnimationFrame(gameLoop);
+            requestAnimationFrame(gameLoop);
         }
         
         function startGame() {
@@ -1662,7 +1659,6 @@
             gameState.sessionGames++;
             gameState.frameCount = 0;
             gameState.lastTime = performance.now();
-            gameState.lastFrameTime = 0;
             gameState.activeBoosts = {
                 speed: 0,
                 size: 0,
@@ -1696,11 +1692,6 @@
             }
             if (audioContext) {
                 setTimeout(playAmbientTone, 1000); // Start ambient after 1 second
-            }
-            
-            // Cancel any existing animation frame
-            if (gameState.animationId) {
-                cancelAnimationFrame(gameState.animationId);
             }
             
             gameLoop();
@@ -1824,4 +1815,3 @@
     </div>
 </body>
 </html>
-                
