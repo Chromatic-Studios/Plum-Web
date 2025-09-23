@@ -134,7 +134,7 @@
 
     <div id="messages"></div>
 
-    <img id="plum" src="assets/plum_idle.gif" alt="Cute Plum">
+    <img id="plum" src="assets/plumagotchi/plum_idle.gif" alt="Cute Plum">
     <div id="table"></div>
   </div>
 
@@ -150,12 +150,13 @@
     const messages = document.getElementById("messages");
 
     const animations = {
-      idle: "assets/plum_idle.gif",
-      eating: "assets/plum_eating.gif",
-      petting: "assets/plum_petting.gif",
-      tv: "assets/plum_tv.gif",
-      resting: "assets/plum_rest.gif"
-    };
+  idle: "assets/plumagotchi/plum_idle.gif",
+  eating: "assets/plumagotchi/plum_eating.gif",
+  petting: "assets/plumagotchi/plum_petting.gif",
+  tv: "assets/plumagotchi/plum_tv.gif",
+  resting: "assets/plumagotchi/plum_rest.gif"
+};
+
 
     function updateStats() {
       hungerEl.textContent = hunger;
